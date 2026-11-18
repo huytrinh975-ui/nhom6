@@ -1,4 +1,5 @@
 <?php
+ob_start();
 /**
  * Header & Sidebar dùng chung cho phân hệ Admin
  * Dự án: Hệ thống Đặt Vé Xem Phim Trực Tuyến (nhom06-cinema-booking)
