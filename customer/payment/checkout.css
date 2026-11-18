@@ -165,6 +165,21 @@ textarea { resize: vertical; margin-bottom: 12px; }
 .cancel-receipt p { overflow-wrap: anywhere; }
 .prose h2 { margin-top: 28px; }
 .prose h2:first-child { margin-top: 0; }
+.qr-method-card { padding: 20px; border: 1px solid #c5d8ff; border-radius: 12px; background: #f5f8ff; }
+.qr-method-card h3 { font-size: 20px; margin-bottom: 8px; }
+.qr-method-card .button { width: 100%; }
+.manual-payment { border-top: 1px solid var(--line); padding-top: 18px; }
+.manual-payment summary { cursor: pointer; font-weight: 650; color: var(--blue-dark); }
+.transfer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.qr-panel { text-align: center; }
+.qr-frame { width: min(100%, 354px); margin: 22px auto 16px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.transfer-qr { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+.qr-expiry { font-size: 13px; margin-bottom: 8px; }
+.qr-panel .status-notice { text-align: left; margin-bottom: 0; }
+.transfer-reference { font-family: Consolas, monospace; color: var(--blue-dark); overflow-wrap: anywhere; }
+.transfer-receipt { margin-bottom: 0; border-bottom: 0; padding-bottom: 0; }
+.transfer-receipt dt { flex: 0 0 38%; }
+.transfer-receipt dd { min-width: 0; }
 @media (max-width: 850px) {
     .checkout-grid { grid-template-columns: minmax(0, 1fr); }
     .page-heading { align-items: flex-start; }

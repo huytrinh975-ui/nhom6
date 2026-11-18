@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 class CBPUserError extends RuntimeException {}
 
+require_once __DIR__ . '/qr-support.php';
+
 function cbp_settings(): array
 {
     static $settings;
@@ -202,12 +204,13 @@ function cbp_payment_key(int $bookingId): string
     return $key;
 }
 
-function cbp_pay(int $bookingId, int $customerId, string $requestKey, string $outcome): int
+function cbp_pay(int $bookingId, int $customerId, string $requestKey, string $outcome, string $method = 'DEMO', string $qrToken = ''): int
 {
-    if (!preg_match('/\A[a-f0-9]{64}\z/', $requestKey) || !in_array($outcome, ['success', 'failed'], true)) {
+    if (!preg_match('/\A[a-f0-9]{64}\z/', $requestKey) || !in_array($outcome, ['success', 'failed'], true)
+        || !in_array($method, ['DEMO', 'QR_DEMO'], true)) {
         throw new CBPUserError('Kết quả hoặc mã giao dịch demo không hợp lệ.', 400);
     }
-    return cbp_transaction(function () use ($bookingId, $customerId, $requestKey, $outcome): int {
+    return cbp_transaction(function () use ($bookingId, $customerId, $requestKey, $outcome, $method, $qrToken): int {
         global $conn;
         $order = cbp_lock_order($bookingId, $customerId);
         $replay = cbp_query('SELECT id FROM cbp_payments WHERE booking_id = ? AND request_key = ?', 'is', [$bookingId, $requestKey])[0] ?? null;
@@ -222,6 +225,9 @@ function cbp_pay(int $bookingId, int $customerId, string $requestKey, string $ou
         $seats = cbp_seats($bookingId);
         $issues = cbp_payment_issues($order, $seats);
         if ($issues) { throw new CBPUserError($issues[0], 409); }
+        if ($method === 'QR_DEMO') {
+            cbp_qr_require_quote($order, $seats, $customerId, $requestKey, $qrToken);
+        }
         // Đồng bộ với cách main đang coi đơn chưa hủy là đang giữ ghế.
         $conflict = cbp_query("SELECT other.id FROM booking_details mine
             JOIN booking_details occupied ON occupied.seat_id = mine.seat_id AND occupied.booking_id <> mine.booking_id
@@ -233,8 +239,8 @@ function cbp_pay(int $bookingId, int $customerId, string $requestKey, string $ou
         $claimConflict = cbp_query('SELECT booking_id FROM cbp_seat_claims WHERE showtime_id = ? AND booking_id <> ? AND seat_id IN (SELECT seat_id FROM booking_details WHERE booking_id = ?) LIMIT 1', 'iii', [(int) $order['showtime_id'], $bookingId, $bookingId]);
         if ($claimConflict) { throw new CBPUserError('Ghế đã được thanh toán trong một đơn khác.', 409); }
 
-        cbp_execute('INSERT INTO cbp_payments (booking_id, attempt_code, request_key, amount, result, method, created_at) VALUES (?, ?, ?, ?, ?, \'DEMO\', ?)',
-            'isssss', [$bookingId, cbp_code('PAY'), $requestKey, $order['total_amount'], $outcome, cbp_now()]);
+        cbp_execute('INSERT INTO cbp_payments (booking_id, attempt_code, request_key, amount, result, method, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'issssss', [$bookingId, cbp_code('PAY'), $requestKey, $order['total_amount'], $outcome, $method, cbp_now()]);
         $attemptId = (int) $conn->insert_id;
         if ($outcome === 'failed') {
             cbp_execute("UPDATE bookings SET payment_status = 'failed' WHERE id = ?", 'i', [$bookingId]);

@@ -7,7 +7,7 @@ function cbp_header(string $title, ?array $customer, string $active = ''): void
     <!doctype html><html lang="vi"><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= cbp_e($title) ?> · CINEBOOK</title>
-    <link rel="stylesheet" href="checkout.css?v=3">
+    <link rel="stylesheet" href="checkout.css?v=4">
     </head><body>
     <a class="skip-link" href="#main">Đến nội dung chính</a>
     <header class="site-header"><div class="container header-inner">
@@ -45,6 +45,11 @@ function cbp_payment_label(array $order): string
 {
     if (($order['refund_status'] ?? '') === 'simulated_refunded') { return 'Đã hoàn tiền thử nghiệm'; }
     return ['pending'=>'Chờ thanh toán', 'paid'=>'Đã thanh toán', 'failed'=>'Thanh toán thất bại'][$order['payment_status']] ?? 'Cần kiểm tra';
+}
+
+function cbp_method_label(string $method): string
+{
+    return ['QR_DEMO' => 'Chuyển khoản QR (thử nghiệm)', 'DEMO' => 'Thanh toán thử nghiệm trực tiếp'][$method] ?? 'Phương thức khác';
 }
 
 function cbp_booking_label(string $value): string
